@@ -12,6 +12,7 @@ Flask = "^2.2.0"
 urllib3 = "^1.26.12"
 sv-ttk = "2.4.5"
 pyttk = "^0.3.2"
+Pillow = "^9.5.0"
 
 [tool.poetry.dev-dependencies]
 debugpy = "^1.6.2"

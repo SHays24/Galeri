@@ -1,1 +1,1 @@
-folder:/home/runner/GrouchyWryComments/gallery;
+folder:/home/runner/Galeri/gallery;
