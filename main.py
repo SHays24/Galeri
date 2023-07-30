@@ -22,6 +22,7 @@ class MainApplication(Tk):
     self.iconphoto(False, chatterbox)
     self.nb = ttk.Notebook(self)
     sv_ttk.set_theme("dark")
+    self.option_add('*tearOff', False)
     
   def IndexFoto(directory, pos):
     index = os.listdir(directory)
@@ -49,13 +50,14 @@ class MainApplication(Tk):
 class ImageGrid:
   def __init__(self, root):
       # Create a canvas to hold the grid of images
-      self.canvas = tk.Canvas(root, width = root.winfo_width(), height = 100, scrollregion=(0,0,0,5000))
-      #self.frame = tk.Frame(self.canvas)
-      self.ys = tk.Scrollbar(self.canvas, orient = 'vertical')
+      self.canvas = tk.Canvas(root, width = root.winfo_width(), height = root.winfo_height(), scrollregion=(0,0,0,9000))
+      self.frame = tk.Frame(self.canvas)
+      self.ys = ttk.Scrollbar(self.canvas, orient = 'vertical', command=self.canvas.yview)
+      self.ys.pack(side="right", fill="y")
       self.canvas.configure(yscrollcommand=self.ys.set)
-      self.canvas.grid(row=1, rowspan=10, column=1, columnspan=4)
-      self.ys.grid(row=1, column=11, rowspan=4, sticky='n')
-      #self.canvas.create_window((4,4), window=self.frame, anchor="nw", tags="self.canvas")
+      self.canvas.pack(side="left", fill="both",expand=True)
+      self.canvas.create_window((4,4), window=self.frame, anchor="nw", tags="self.canvas")
+      self.frame.bind("<Configure>", self.FrameConfig)
       # Iterate over the image files and create ImageTk.PhotoImage objects
       self.Thumbs = []
       self.Imgs = []
@@ -71,13 +73,13 @@ class ImageGrid:
   def ShowGrid(root, Thumbs):
       x=0
       for i, photo in enumerate(Thumbs):
-          label = ttk.Label(root.canvas, image=photo)
+          label = ttk.Label(root.frame, image=photo)
           label.grid(row=(x+1), column=(i%4))
           if i%4==3:
             x=x+1
             print("bazoopa"+ str(x))
           # Keep a reference to the image to prevent garbage collection
-          label.image = photo
+          #label.image = photo
         
   def RowScale(root, Percent=100):
     Thumbs = []
@@ -90,6 +92,21 @@ class ImageGrid:
       Thumbs.append(photo)
     print("yolo")
     root.ShowGrid(Thumbs)
+  def FrameConfig(self, event):
+    self.canvas.configure(scrollregion=self.canvas.bbox("all"))
+class MenuBar:
+  def __init__(self, root):
+    win = root
+    menubar = tk.Menu(win)
+    win['menu'] = menubar
+    #options
+    menu_file = tk.Menu(menubar)
+    menu_edit = tk.Menu(menubar)
+    menubar.add_cascade(menu=menu_file, label='File')
+    def setFolder():
+      MainApplication.setFolder()
+    menu_file.add_command(label='Select', command=setFolder)
+    menubar.add_cascade(menu=menu_edit, label='Edit')
 if __name__ == '__main__':
   app = MainApplication()
   app.attributes('-zoomed', True)
@@ -99,11 +116,13 @@ if __name__ == '__main__':
   print(directory.group(0))
   image_files = app.load_images(directory.group(0)) # image file list stored here
   print(image_files)
+  app.menubar = MenuBar(app)
   app.ImageGrid = ImageGrid(app)
+  #app.menubar = MenuBar(app)
   def command():
     ImageGrid.RowScale(app.ImageGrid)
   bt = ttk.Button(app, command=command)
-  bt.grid()
+  bt.pack()
   #ImageGrid.RowScale(root=app.ImageGrid, 14)
   app.mainloop()
 
