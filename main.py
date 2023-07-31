@@ -15,14 +15,14 @@ class MainApplication(Tk):
 		super().__init__()
 		try:
 			open("settings.txt", "r")
-		except:
-			setFolder() 
+		except FileNotFoundError:
+			setFolder()
 		self.title("Galeri")
-		chatterbox = PhotoImage(file = "./chatterbox.png")
+		chatterbox = PhotoImage(file="./chatterbox.png")
 		self.iconphoto(False, chatterbox)
 		sv_ttk.set_theme("dark")
 		self.option_add('*tearOff', False)
-		
+
 	def IndexFoto(directory, pos):
 		index = os.listdir(directory)
 		index.sort()
@@ -31,8 +31,7 @@ class MainApplication(Tk):
 		name = index[pos]
 		path = os.path.join(directory, name)
 		return path
-		
-		
+
 	def setFolder(bug="fdfkd"):
 		folder = filedialog.askdirectory()
 		if folder:
@@ -41,54 +40,58 @@ class MainApplication(Tk):
 			f.close()
 	try:
 		f = open("settings.txt", "r")
-	except:
+	except FileNotFoundError:
 		setFolder()
 		f = open("setting.txt", "r")
+
 	def load_images(self, directory):
 		p = Path(directory)
 		image_files = list(p.glob('*.jpg'))
 		return image_files
+
+
 class ImageGrid:
 	def __init__(self, root):
-			# Create a canvas to hold the grid of images
-			self.canvas = tk.Canvas(root, width = root.winfo_width(), height = root.winfo_height(), scrollregion=(0,0,0,9000))
-			self.frame = tk.Frame(self.canvas)
-			self.ys = ttk.Scrollbar(self.canvas, orient = 'vertical', command=self.canvas.yview)
-			self.ys.pack(side="right", fill="y")
-			self.canvas.configure(yscrollcommand=self.ys.set)
-			self.canvas.pack(side="left", fill="both",expand=True)
-			self.canvas.create_window((4,4), window=self.frame, anchor="nw", tags="self.canvas")
-			self.frame.bind("<Configure>", self.FrameConfig)
-			# Iterate over the image files and create ImageTk.PhotoImage objects
-			self.Thumbs = []
-			self.Imgs = []
-			self.Exif = []
-			for file in image_files:
-					img = Image.open(file)
-					img = ImageOps.exif_transpose(img)
-					exif = img.getexif()
-					img.thumbnail((img.width, 150))	# Resize the image
-					photo = ImageTk.PhotoImage(img)
-					imgref = ImageRef(self, photo, img, exif)
-					self.Imgs.append(imgref)
-					print(imgref.getDate())
-					self.Thumbs.append(photo)
-			print(ImageRef.getMonths(self.Imgs))
-			self.ShowGrid(self.Thumbs)
-			# Create a grid of labels and display the images
-			root.bind('<Button-4>', lambda e: self.canvas.yview_scroll(int(-1*e.num), 'units'))
-			root.bind('<Button-5>', lambda e: self.canvas.yview_scroll(int(1*e.num), 'units'))
+		# Create a canvas to hold the grid of images
+		self.canvas = tk.Canvas(root, width=root.winfo_width(), height=root.winfo_height(), scrollregion=(0, 0, 0, 9000))
+		self.frame = tk.Frame(self.canvas)
+		self.ys = ttk.Scrollbar(self.canvas, orient='vertical', command=self.canvas.yview)
+		self.ys.pack(side="right", fill="y")
+		self.canvas.configure(yscrollcommand=self.ys.set)
+		self.canvas.pack(side="left", fill="both", expand=True)
+		self.canvas.create_window((4, 4), window=self.frame, anchor="nw", tags="self.canvas")
+		self.frame.bind("<Configure>", self.FrameConfig)
+		# Iterate over the image files and create ImageTk.PhotoImage objects
+		self.Thumbs = []
+		self.Imgs = []
+		self.Exif = []
+		for file in image_files:
+			img = Image.open(file)
+			img = ImageOps.exif_transpose(img)
+			exif = img.getexif()
+			img.thumbnail((img.width, 150))	 # Resize the image
+			photo = ImageTk.PhotoImage(img)
+			imgref = ImageRef(self, photo, img, exif)
+			self.Imgs.append(imgref)
+			print(imgref.getDate())
+			self.Thumbs.append(photo)
+		print(ImageRef.getMonths(self.Imgs))
+		self.ShowGrid(self.Thumbs)
+		# Create a grid of labels and display the images
+		root.bind('<Button-4>', lambda e: self.canvas.yview_scroll(int(-1*e.num), 'units'))
+		root.bind('<Button-5>', lambda e: self.canvas.yview_scroll(int(1*e.num), 'units'))
+
 	def ShowGrid(root, Thumbs):
-			x=0
-			for i, photo in enumerate(Thumbs):
-					label = ttk.Label(root.frame, image=photo)
-					label.grid(row=(x+1), column=(i%4))
-					if i%4==3:
-						x=x+1
-						print("bazoopa"+ str(x))
-					# Keep a reference to the image to prevent garbage collection
-					#label.image = photo
-				
+		x=0
+	for i, photo in enumerate(Thumbs):
+		label = ttk.Label(root.frame, image=photo)
+		label.grid(row=(x+1), column=(i%4))
+		if i%4==3:
+			x=x+1
+			print("bazoopa"+ str(x))
+		# Keep a reference to the image to prevent garbage collection
+		# label.image = photo
+
 	def RowScale(root, Percent=100):
 		Thumbs = []
 		row = root.canvas.grid_slaves(0)
