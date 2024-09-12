@@ -22,6 +22,7 @@ class MainApplication(Tk):
         self.iconphoto(False, chatterbox)
         sv_ttk.set_theme("dark")
         self.option_add('*tearOff', False)
+        self.thumblist = []
 
     def IndexFoto(directory, pos):
         index = os.listdir(directory)
@@ -42,7 +43,7 @@ class MainApplication(Tk):
         f = open("settings.txt", "r")
     except FileNotFoundError:
         setFolder()
-        f = open("setting.txt", "r")
+        f = open("settings.txt", "r")
 
     def load_images(self, directory):
         p = Path(directory)
@@ -53,6 +54,7 @@ class MainApplication(Tk):
 class ImageGrid:
     def __init__(self, root):
         # Create a canvas to hold the grid of images
+        self.win = root
         self.canvas = tk.Canvas(root, width=root.winfo_width(),
                                 height=root.winfo_height(),
                                 scrollregion=(0, 0, 0, 9000))
@@ -73,13 +75,11 @@ class ImageGrid:
             img = Image.open(file)
             img = ImageOps.exif_transpose(img)
             exif = img.getexif()
-            img.thumbnail((img.width, 150))     # Resize the image
+            img.thumbnail((img.width, 150))  # Resize the image
             photo = ImageTk.PhotoImage(img)
             imgref = ImageRef(self, photo, img, exif)
             self.Imgs.append(imgref)
-            print(imgref.getDate())
             self.Thumbs.append(photo)
-        print(ImageRef.getMonths(self.Imgs))
         self.ShowGrid(self.Imgs)
         # Create a grid of labels and display the images
         root.bind('<Button-4>', lambda e: self.canvas.yview_scroll(int(-1*e.num),
@@ -92,16 +92,13 @@ class ImageGrid:
 
     def ShowGrid(root, Thumbs):
         root.ClearGrid()
-        print("hfjkdhfdklshfdkjshafkdshfkdlshnf")
-        print(Thumbs)
-        print("fsf")
         x = 0
         for i, photo in enumerate(Thumbs):
-            label = ttk.Label(root.frame, image=photo.getImage())
+            image = photo.getImage()
+            label = ttk.Label(root.frame, image=image)
             label.grid(row=(x+1), column=(i % 4))
             if i % 4 == 3:
                 x = x + 1
-                print("bazoopa" + str(x))
             # Keep a reference to the image to prevent garbage collection
             # label.image = photo
 
@@ -115,7 +112,7 @@ class ImageGrid:
             img.thumbnail((img.width, Percent))
             photo = ImageTk.PhotoImage(img)
             Thumbs.append(photo)
-        print("yolo")
+
         root.ShowGrid(Thumbs)
 
     def FrameConfig(self, event):
@@ -175,19 +172,19 @@ class MenuBar:
 
         upmenu.add_radiobutton(label="All", variable=var, value="All",
                                command=lambda: find())
-        print(oplist)
+
         for option in oplist:
             upmenu.add_radiobutton(label=option, variable=var, value=option,
                                    command=lambda: find())
-            print(option)
 
 
 class ImageRef:
     def __init__(self, root, image, thumbnail, exif):
         self.image = image
-        self.thumbnail = thumbnail
+        self.img = thumbnail
         self.data = exif
         self.date = exif[306]
+        self.root = root
 
     def getDate(self):
 
@@ -220,7 +217,6 @@ class ImageRef:
         if (str(year) == "All"):
             foundY = imglist
         else:
-            print(year)
             for img in imglist:
                 if (img.getDate().split(":")[0] == str(year)):
                     foundY.append(img)
@@ -231,7 +227,6 @@ class ImageRef:
         if (str(Month) == "All"):
             foundM = imglist
         else:
-            print(Month)
             for img in imglist:
                 if (img.getDate().split(":")[1] == str(Month)):
                     foundM.append(img)
@@ -244,34 +239,25 @@ if __name__ == '__main__':
     # Create the image grid
     f = open("settings.txt", "r")
     directory = re.search(r"(?<=folder:)\/[^;]+", f.read())
-    try:
-        print(directory.group(0))
+    '''try:
+        dskl = directory.group(0)
     except:
-        app.setFolder()
+        app.setFolder()'''
     image_files = app.load_images(directory.group(0))  # image file list stored here
-    print(image_files)
     app.menubar = MenuBar(app)
     app.ImageGrid = ImageGrid(app)
 
-    def hello():
-        print("hello")
-
-    def hello1():
-        print("hell1o")
-
-    def command():
+    def YearMenu():
         app.menubar.addSubmenu(app.menubar, app.menubar.menu_filter.year,
                                ImageRef.getYears(app.ImageGrid.getImgs(app.ImageGrid)),
                                "Year")
-        print(ImageRef.getYears(app.ImageGrid.getImgs(app.ImageGrid)))
 
-    def command1():
+    def MonthMenu():
         app.menubar.addSubmenu(app.menubar, app.menubar.menu_filter.month,
-                                ImageRef.getMonths(
+                               ImageRef.getMonths(
                                                     app.ImageGrid.getImgs(app.ImageGrid)),
-                                "Month")
-        print(ImageRef.getMonths(app.ImageGrid.getImgs(app.ImageGrid)))
-    command()
-    command1()
-    # ImageGrid.RowScale(root=app.ImageGrid, 14)
+                               "Month")
+    YearMenu()
+    MonthMenu()
+    # ImageGrid.RowScale(root=app.ImageGrid, 1)
     app.mainloop()
